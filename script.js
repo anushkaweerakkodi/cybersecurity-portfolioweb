@@ -343,39 +343,64 @@ function addInputLine() {
     }
 }
 
-// ===== CONTACT FORM =====
-contactForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    // Get form values
-    const formData = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        subject: document.getElementById('subject').value,
-        message: document.getElementById('message').value
-    };
-    
-    // In a real app, you would send this to a backend
-    // For demo, show success message
-    const submitBtn = contactForm.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    
-    // Simulate API call
-    setTimeout(() => {
-        // Show success message
-        alert(`✅ Message sent successfully!\n\nThank you ${formData.name}, I'll get back to you soon.`);
+/* ===== 📧 CONTACT FORM - FIXED FOR FORMSPREE ===== */
+if (contactForm) {
+    contactForm.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent page reload
         
-        // Reset form
-        contactForm.reset();
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
         
-        // Restore button
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }, 1500);
-});
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        try {
+            // Send data to Formspree using fetch API
+            const response = await fetch(contactForm.action, {
+                method: contactForm.method,
+                body: new FormData(contactForm),
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Success!
+                contactForm.reset();
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Sent!';
+                
+                // Show success message below form
+                const successMsg = document.createElement('p');
+                successMsg.textContent = '✅ Message sent successfully! I\'ll get back to you soon.';
+                successMsg.style.color = 'var(--neon-green)';
+                successMsg.style.marginTop = '1rem';
+                successMsg.style.textAlign = 'center';
+                
+                // Remove old messages if any
+                const oldMsg = contactForm.querySelector('p[style*="color"]');
+                if (oldMsg) oldMsg.remove();
+                
+                contactForm.appendChild(successMsg);
+                
+                // Reset button after 5 seconds
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                }, 5000);
+                
+            } else {
+                throw new Error('Submission failed');
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Something went wrong. Please try again or email me directly at anushkaweerakkodi90@gmail.com');
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        }
+    });
+}
 
 // ===== ADDITIONAL INTERACTIONS =====
 // Add hover effect to project cards on mobile
